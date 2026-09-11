@@ -1,0 +1,14 @@
+{
+  "name": "rexio-pay",
+  "private": true,
+  "version": "0.1.0",
+  "description": "RexiO Pay — SMS-verified payment gateway for Bangladeshi MFS (bKash, Nagad). AGPL-3.0.",
+  "license": "AGPL-3.0",
+  "packageManager": "pnpm@9.14.0",
+  "scripts": {
+    "dev": "pnpm --filter @rexio-pay/web dev",
+    "build": "pnpm --filter @rexio-pay/web build",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "pnpm -r lint"
+  }
+}

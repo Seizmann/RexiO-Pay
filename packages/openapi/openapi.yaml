@@ -1,0 +1,100 @@
+openapi: 3.1.0
+info:
+  title: RexiO Pay Merchant API
+  version: 0.1.0
+  description: >
+    SMS-verified payment gateway for Bangladeshi MFS. Create checkout
+    sessions, receive signed webhooks when payments verify.
+  license:
+    name: AGPL-3.0
+servers:
+  - url: https://api.pay.rexio.pro
+security:
+  - bearerAuth: []
+tags:
+  - name: sessions
+  - name: payments
+  - name: payment-links
+paths:
+  /v1/sessions:
+    post:
+      tags: [sessions]
+      operationId: createSession
+      summary: Create a checkout session
+      parameters:
+        - in: header
+          name: Idempotency-Key
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [amount]
+              properties:
+                amount:
+                  type: integer
+                  description: Integer taka (no paisa).
+                payment_profile_ids:
+                  type: array
+                  items: { type: string }
+                customer:
+                  type: object
+                  properties:
+                    name: { type: string }
+                    email: { type: string }
+                    mobile: { type: string }
+                return_url: { type: string, format: uri }
+                cancel_url: { type: string, format: uri }
+                metadata:
+                  type: object
+                  additionalProperties: true
+      responses:
+        "200":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Session" }
+        "402":
+          description: Plan limit exceeded
+  /v1/sessions/{id}:
+    get:
+      tags: [sessions]
+      operationId: getSession
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Session" }
+  /v1/payments:
+    get:
+      tags: [payments]
+      operationId: listPayments
+      responses:
+        "200":
+          description: OK
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: "API key: rk_live_..."
+  schemas:
+    Session:
+      type: object
+      properties:
+        id: { type: string }
+        amount: { type: integer }
+        currency: { type: string, const: BDT }
+        status:
+          type: string
+          enum: [pending, succeeded, expired, canceled]
+        expires_at: { type: string, format: date-time }
+        created_at: { type: string, format: date-time }

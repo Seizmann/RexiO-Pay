@@ -1,0 +1,37 @@
+@import "tailwindcss";
+
+/*
+  RexiO Pay design tokens — from DESIGN.md (Stripe-inspired "Stripi" system).
+  Keep in sync with DESIGN.md; do not alter without user instruction.
+*/
+@theme {
+  --color-primary: #533afd;
+  --color-primary-deep: #4434d4;
+  --color-primary-press: #2e2b8c;
+  --color-brand-dark: #1c1e54;
+  --color-ink: #0d253d;
+  --color-ink-secondary: #273951;
+  --color-ink-mute: #64748d;
+  --color-canvas: #ffffff;
+  --color-canvas-soft: #f6f9fc;
+  --color-hairline: #e3e8ee;
+
+  --font-display:
+    "Inter", "SF Pro Display", system-ui, -apple-system, sans-serif;
+}
+
+/*
+  ss01 stylistic set globally (DESIGN.md typography rule).
+  Money/numeric cells additionally need tnum — apply `tabular-nums` utility on those elements.
+*/
+body {
+  font-feature-settings: "ss01";
+  font-weight: 300;
+  color: var(--color-ink);
+  background-color: var(--color-canvas);
+}
+
+/* Tabular figures for money — DESIGN.md signature rule */
+.tnum {
+  font-feature-settings: "tnum", "ss01";
+}

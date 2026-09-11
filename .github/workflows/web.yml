@@ -1,0 +1,24 @@
+name: web
+
+on:
+  push:
+    branches: [main]
+    paths: ["apps/web/**", "packages/**"]
+  pull_request:
+    paths: ["apps/web/**", "packages/**"]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @rexio-pay/web typecheck
+      - run: pnpm --filter @rexio-pay/web build

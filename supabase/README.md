@@ -1,0 +1,23 @@
+-- RLS policies live here as .sql files, applied after backend migrations.
+-- Tenancy rule (REQUIREMENT §8): every tenant table has merchant_id;
+-- merchants read their own rows; platform admin bypasses via is_platform_admin.
+-- No direct client INSERT/UPDATE/DELETE anywhere — all writes via Go backend.
+
+-- 000_enable_rls.sql — apply when tables exist (M1):
+--
+-- ALTER TABLE public.merchants ENABLE ROW LEVEL SECURITY;
+-- ALTER TABLE public.payment_profiles ENABLE ROW LEVEL SECURITY;
+-- ... (every tenant table)
+--
+-- Example read policy template:
+--
+-- CREATE POLICY merchants_read_own ON public.merchants
+--   FOR SELECT
+--   USING (
+--     owner_user_id = auth.uid()
+--     OR EXISTS (
+--       SELECT 1 FROM public.team_members tm
+--       WHERE tm.merchant_id = merchants.id
+--         AND tm.user_id = auth.uid()
+--     )
+--   );

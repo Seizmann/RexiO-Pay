@@ -1,0 +1,71 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Environment files (real credentials — never commit)
+.env
+.env.local
+.env.*.local
+apps/web/.env.local
+apps/backend/.env
+
+# AI Agent working documents (never commit)
+AGENT.md
+CLAUDE.md
+DESIGN.md
+REQUIREMENT.md
+SECRETS.md
+WORKLOGS.md
+HUMANIZER.md
+docs/
+
+# Build outputs
+dist/
+build/
+.next/
+.output/
+.vercel/
+out/
+
+# Vite
+vite.config.ts.timestamp-*
+
+# TypeScript
+*.tsbuildinfo
+
+# Go
+apps/backend/bin/
+apps/backend/tmp/
+*.exe
+
+# Gradle / Android
+.gradle/
+apps/android/build/
+apps/android/app/build/
+apps/android/.idea/
+apps/android/local.properties
+*.apk
+*.aab
+
+# Supabase local
+supabase/.temp/
+supabase/functions/.cache/
+
+# ZCode local state
+.zcode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+apps/backend/server/
