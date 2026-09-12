@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
-	"reflect"
 	"strings"
 	"time"
 
@@ -170,7 +169,7 @@ func (e *Engine) Process(ctx context.Context, smsID string, parsed ParsedSMS) (R
 	if err != nil {
 		return Result{}, fmt.Errorf("matching: begin: %w", err)
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 	q := dbsqlc.New(tx)
 	row, err := q.GetSMSMessage(ctx, smsID)
 	if err != nil {
@@ -474,17 +473,6 @@ func parsedJSON(p ParsedSMS) pqtype.NullRawMessage {
 	b, _ := json.Marshal(p)
 	return pqtype.NullRawMessage{RawMessage: b, Valid: true}
 }
-func contextWithTimeout(ctx context.Context) context.Context {
-	if _, ok := ctx.Deadline(); !ok {
-		c, cancel := context.WithTimeout(ctx, 30*time.Second)
-		// The process-wide request context owns the lifetime of matching work;
-		// attach cancellation so the timeout resources are released when done.
-		return context.WithValue(c, matchingCancelKey{}, cancel)
-	}
-	return ctx
-}
-
-type matchingCancelKey struct{}
 
 func parseStoredSMS(raw pqtype.NullRawMessage) (ParsedSMS, bool) {
 	if !raw.Valid || len(raw.RawMessage) == 0 {
@@ -499,27 +487,3 @@ func parseStoredSMS(raw pqtype.NullRawMessage) (ParsedSMS, bool) {
 
 // parserBalance supports parser implementations that represent an optional
 // balance as either *int64, int64, or a nullable integer.
-func parserBalance(v any) *int64 {
-	if v == nil {
-		return nil
-	}
-	rv := reflect.ValueOf(v)
-	if rv.Kind() == reflect.Pointer {
-		if rv.IsNil() {
-			return nil
-		}
-		return parserBalance(rv.Elem().Interface())
-	}
-	switch n := v.(type) {
-	case int64:
-		return &n
-	case int:
-		value := int64(n)
-		return &value
-	case sql.NullInt64:
-		if n.Valid {
-			return &n.Int64
-		}
-	}
-	return nil
-}

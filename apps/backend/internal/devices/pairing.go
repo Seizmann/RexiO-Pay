@@ -69,13 +69,6 @@ func NewPairHandler(pool *dbpkg.Pool, encryptionKey []byte) *PairHandler {
 	return &PairHandler{Pool: pool, EncryptionKey: encryptionKey}
 }
 
-func (h *PairHandler) now() time.Time {
-	if h.Now != nil {
-		return h.Now()
-	}
-	return time.Now()
-}
-
 // ServeHTTP consumes a one-time QR token and returns a generated 32-byte
 // secret exactly once. Only encrypted secret material is persisted.
 func (h *PairHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {

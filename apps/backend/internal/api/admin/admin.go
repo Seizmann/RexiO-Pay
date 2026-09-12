@@ -307,9 +307,6 @@ func (h *Handler) audit(r *http.Request, merchantID, action, entity, entityID st
 		}
 	}
 	actor := sql.NullString{}
-	if mc := middleware.GetMerchant(r.Context()); mc != nil {
-		// API keys do not identify a user, so keep actor_user_id null.
-	}
 	_ = h.q.InsertAuditLog(r.Context(), db.InsertAuditLogParams{
 		ID: idgen.New(idgen.PrefixAudit), MerchantID: nullableString(merchantID), ActorUserID: actor,
 		Action: action, Entity: entity, EntityID: entityID, Details: payload,
