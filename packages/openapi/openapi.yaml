@@ -1,10 +1,19 @@
 openapi: 3.1.0
 info:
-  title: RexiO Pay Merchant API
-  version: 0.1.0
-  description: >
-    SMS-verified payment gateway for Bangladeshi MFS. Create checkout
-    sessions, receive signed webhooks when payments verify.
+  title: RexiO Pay API
+  version: 0.2.0
+  description: |
+    RexiO Pay merchant and checkout API.
+
+    Two surfaces share this base URL:
+
+    - **Merchant API** — `Authorization: Bearer rk_live_...` (API key).
+    - **Public checkout** — no auth; used by the hosted checkout page.
+
+    Errors use one shape everywhere: `{"error":{"code","message","param?"}}`.
+
+    Phone numbers are canonicalized to `01XXXXXXXXX` everywhere. Amounts are
+    integer taka (BDT has no paisa in MFS send money).
   license:
     name: AGPL-3.0
 servers:
@@ -12,85 +21,168 @@ servers:
 security:
   - bearerAuth: []
 tags:
+  - name: checkout
+    description: Public, unauthenticated checkout endpoints
   - name: sessions
   - name: payments
   - name: payment-links
   - name: payment-profiles
-  - name: api-keys
   - name: devices
+  - name: api-keys
   - name: team
-  - name: webhooks
+  - name: branding
+  - name: settings
+  - name: domain-whitelist
+  - name: assets
+  - name: onboarding
+  - name: admin
+    description: Platform-admin only (API key of a merchant whose owner has is_platform_admin)
 paths:
-  /v1/sessions:
-    post:
-      tags: [sessions]
-      operationId: createSession
-      summary: Create a checkout session
+  /healthz:
+    get:
+      tags: [misc]
+      summary: Health check
+      security: []
+      responses:
+        "200":
+          description: OK
+  /v1/checkout/{id}:
+    get:
+      tags: [checkout]
+      summary: Public checkout view
+      description: |
+        Poll this every ~3 seconds from the checkout page. A pending session
+        past `expires_at` is flipped to `expired` on read.
+      security: []
       parameters:
-        - in: header
-          name: Idempotency-Key
-          schema: { type: string }
+        - $ref: "#/components/parameters/SessionID"
+      responses:
+        "200":
+          description: Checkout view
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CheckoutSession"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /v1/checkout/{id}/claim:
+    post:
+      tags: [checkout]
+      summary: Submit customer claim ("I have paid")
+      security: []
+      parameters:
+        - $ref: "#/components/parameters/SessionID"
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [amount]
+              required: [sender_number]
               properties:
-                amount: { type: integer, description: "Integer taka (no paisa)" }
-                payment_profile_ids: { type: array, items: { type: string } }
-                customer:
-                  type: object
-                  properties:
-                    name: { type: string }
-                    email: { type: string }
-                    mobile: { type: string }
-                return_url: { type: string, format: uri }
-                cancel_url: { type: string, format: uri }
-                metadata: { type: object, additionalProperties: true }
+                sender_number:
+                  type: string
+                  description: Customer's MFS number; canonicalized to 01XXXXXXXXX
+                trx_id:
+                  type: string
+                  maxLength: 100
+                confirmed:
+                  type: boolean
+                  description: Sets confirmed_at; a UX signal, not a matching requirement
       responses:
         "200":
+          description: Updated checkout view
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CheckoutSession"
+        "409":
+          description: Session no longer pending or expired
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /v1/sessions:
+    post:
+      tags: [sessions]
+      summary: Create checkout session
+      description: |
+        Exactly one payment profile per session. `Idempotency-Key` (<=255
+        chars) is honored for 24h: retries replay the original response;
+        reuse with a different body returns 409 idempotency_conflict.
+        return_url/cancel_url hosts must be whitelisted.
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSessionRequest"
+      responses:
+        "201":
           description: Created
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/Session" }
+              schema:
+                $ref: "#/components/schemas/Session"
         "402":
-          description: Plan limit exceeded
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/ErrorResponse" }
-
+          $ref: "#/components/responses/PlanLimit"
+        "403":
+          $ref: "#/components/responses/DomainNotAllowed"
   /v1/sessions/{id}:
     get:
       tags: [sessions]
-      operationId: getSession
+      summary: Retrieve session (merchant-scoped)
       parameters:
-        - in: path
-          name: id
-          required: true
-          schema: { type: string }
+        - $ref: "#/components/parameters/SessionID"
       responses:
         "200":
-          description: OK
+          description: Session
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/Session" }
-
+              schema:
+                $ref: "#/components/schemas/Session"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /v1/sessions/{id}/cancel:
+    post:
+      tags: [sessions]
+      summary: Cancel a pending session
+      parameters:
+        - $ref: "#/components/parameters/SessionID"
+      responses:
+        "200":
+          description: Canceled session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Session"
+        "409":
+          description: Session is not pending
   /v1/payments:
     get:
       tags: [payments]
-      operationId: listPayments
+      summary: List payments
       parameters:
-        - in: query
-          name: limit
-          schema: { type: integer }
-        - in: query
-          name: offset
-          schema: { type: integer }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+        - name: offset
+          in: query
+          schema: { type: integer, minimum: 0, default: 0 }
+        - name: from
+          in: query
+          schema: { type: string, format: date-time }
+        - name: to
+          in: query
+          schema: { type: string, format: date-time }
+        - name: provider
+          in: query
+          schema: { type: string, enum: [bkash, nagad] }
       responses:
         "200":
-          description: OK
+          description: Page (has_more, no total count)
           content:
             application/json:
               schema:
@@ -99,34 +191,734 @@ paths:
                   data:
                     type: array
                     items: { $ref: "#/components/schemas/Payment" }
-
+                  has_more: { type: boolean }
+  /v1/payments/{id}:
+    get:
+      tags: [payments]
+      summary: Retrieve payment
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Payment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Payment"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /v1/payment-links:
+    get:
+      tags: [payment-links]
+      summary: List payment links
+      responses:
+        "200":
+          description: Links
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: "#/components/schemas/PaymentLink" }
+    post:
+      tags: [payment-links]
+      summary: Create payment link
+      description: "`amount: null` means the customer enters the amount."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [payment_profile_id, title]
+              properties:
+                payment_profile_id: { type: string }
+                title: { type: string, maxLength: 200 }
+                amount: { type: integer, nullable: true }
+                reusable: { type: boolean, default: false }
+                expires_at: { type: string, format: date-time, nullable: true }
+      responses:
+        "201":
+          description: Created link (url points at /pay/link/{id})
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentLink"
+  /v1/payment-links/{id}:
+    get:
+      tags: [payment-links]
+      summary: Retrieve payment link
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Link
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentLink"
+  /v1/payment-profiles:
+    get:
+      tags: [payment-profiles]
+      summary: List payment profiles
+      responses:
+        "200":
+          description: Profiles
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: "#/components/schemas/PaymentProfile" }
+    post:
+      tags: [payment-profiles]
+      summary: Create payment profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [provider, account_type, mfs_number]
+              properties:
+                provider: { type: string, enum: [bkash, nagad] }
+                account_type: { type: string, enum: [personal, agent, merchant] }
+                mfs_number: { type: string, description: canonical 01XXXXXXXXX }
+                display_name: { type: string }
+                balance_verification: { type: boolean, default: true }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentProfile"
+        "402":
+          $ref: "#/components/responses/PlanLimit"
+        "409":
+          description: A profile for this number already exists
+  /v1/payment-profiles/{id}:
+    get:
+      tags: [payment-profiles]
+      summary: Retrieve profile
+      parameters:
+        - $ref: "#/components/parameters/ProfileID"
+      responses:
+        "200":
+          description: Profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentProfile"
+    patch:
+      tags: [payment-profiles]
+      summary: Update profile
+      description: Only display_name, sim_slot (0..3), and status are writable today.
+      parameters:
+        - $ref: "#/components/parameters/ProfileID"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                display_name: { type: string }
+                sim_slot: { type: integer, minimum: 0, maximum: 3 }
+                status: { type: string, enum: [active, disabled, pending] }
+      responses:
+        "200":
+          description: Updated profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentProfile"
+  /v1/devices:
+    get:
+      tags: [devices]
+      summary: List devices
+      responses:
+        "200":
+          description: Devices
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: "#/components/schemas/Device" }
+    post:
+      tags: [devices]
+      summary: Create device (returns one-time pairing token)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string }
+      responses:
+        "201":
+          description: Created with pairing_token (shown once, 15-minute expiry)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Device"
+        "402":
+          $ref: "#/components/responses/PlanLimit"
+  /v1/devices/{id}/disable:
+    post:
+      tags: [devices]
+      summary: Disable device
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Disabled
+  /v1/devices/{id}/repair:
+    post:
+      tags: [devices]
+      summary: Regenerate pairing token (15-minute expiry)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: New pairing token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id: { type: string }
+                  pairing_token: { type: string }
+                  pairing_expires_at: { type: string, format: date-time }
+  /v1/device/pair:
+    post:
+      tags: [devices]
+      summary: Device pairing exchange (Android app)
+      description: Called by the RexiO Pay Engine app after scanning the dashboard QR. QR payload is canonical JSON {"server_url","merchant_id","pairing_token"}.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [pairing_token]
+              properties:
+                pairing_token: { type: string }
+                device_name: { type: string }
+                model: { type: string }
+                android_version: { type: string }
+                app_version: { type: string }
+      responses:
+        "200":
+          description: Paired; device_secret is shown once and stored in the Android Keystore
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  device_id: { type: string }
+                  device_secret: { type: string }
+                  status: { type: string }
+  /v1/api-keys:
+    get:
+      tags: [api-keys]
+      summary: List API keys (prefix only, never the raw key)
+      responses:
+        "200":
+          description: Keys
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: "#/components/schemas/ApiKey" }
+    post:
+      tags: [api-keys]
+      summary: Create API key
+      description: The raw key (`rk_live_...`) is returned exactly once in `key`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string }
+                scopes: { type: string, default: full }
+      responses:
+        "201":
+          description: Created with one-time raw key
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiKey"
+  /v1/api-keys/{id}:
+    delete:
+      tags: [api-keys]
+      summary: Revoke API key
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Revoked
+  /v1/team:
+    get:
+      tags: [team]
+      summary: List team members
+      responses:
+        "200":
+          description: Members
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: "#/components/schemas/TeamMember" }
+    post:
+      tags: [team]
+      summary: Invite team member
+      description: The invitee must already have a RexiO Pay account (404 user_not_found otherwise). No email is sent.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email: { type: string }
+                role: { type: string, enum: [owner, admin, staff], default: staff }
+      responses:
+        "201":
+          description: Invited
+        "402":
+          $ref: "#/components/responses/PlanLimit"
+  /v1/team/{id}:
+    patch:
+      tags: [team]
+      summary: Change role ({id} is the user_id)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [role]
+              properties:
+                role: { type: string, enum: [owner, admin, staff] }
+      responses:
+        "200":
+          description: Updated
+    delete:
+      tags: [team]
+      summary: Remove team member
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "204":
+          description: Removed
+  /v1/branding:
+    get:
+      tags: [branding]
+      summary: Get merchant (full row incl. plan and settings)
+      responses:
+        "200":
+          description: Merchant
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Merchant"
+    patch:
+      tags: [branding]
+      summary: Update branding
+      description: name, brand_color (#rrggbb) and a valid support_phone (01XXXXXXXXX) are required on every call.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, brand_color, support_phone]
+              properties:
+                name: { type: string }
+                logo_url: { type: string }
+                favicon_url: { type: string }
+                brand_color: { type: string, pattern: "^#[0-9a-fA-F]{6}$" }
+                support_email: { type: string }
+                support_phone: { type: string }
+      responses:
+        "200":
+          description: Updated merchant
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Merchant"
+  /v1/settings:
+    get:
+      tags: [settings]
+      summary: Get merchant settings (jsonb)
+      responses:
+        "200":
+          description: Settings
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  settings: { $ref: "#/components/schemas/MerchantSettings" }
+    patch:
+      tags: [settings]
+      summary: Merge-patch settings
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MerchantSettings"
+      responses:
+        "200":
+          description: Updated settings
+  /v1/domain-whitelist:
+    get:
+      tags: [domain-whitelist]
+      summary: List whitelisted domains
+      responses:
+        "200":
+          description: Domains
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: "#/components/schemas/DomainWhitelist" }
+    post:
+      tags: [domain-whitelist]
+      summary: Add domain
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [domain]
+              properties:
+                domain: { type: string }
+      responses:
+        "201":
+          description: Added
+        "409":
+          description: Already whitelisted
+  /v1/domain-whitelist/{id}:
+    delete:
+      tags: [domain-whitelist]
+      summary: Remove domain
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "204":
+          description: Removed
+  /v1/assets/presign:
+    post:
+      tags: [assets]
+      summary: Presign an R2 upload for branding assets
+      description: PUT the file to upload_url (15-minute expiry), then save public_url via PATCH /v1/branding.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [filename, content_type, kind]
+              properties:
+                filename: { type: string }
+                content_type: { type: string }
+                kind: { type: string, enum: [logo, favicon] }
+      responses:
+        "201":
+          description: Presigned upload
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  key: { type: string }
+                  upload_url: { type: string, format: uri }
+                  public_url: { type: string, format: uri }
+                  expires_in: { type: integer }
+  /v1/onboarding/otp/init:
+    post:
+      tags: [onboarding]
+      summary: Start MFS number verification (send 1 taka)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [provider, account_type, mfs_number]
+              properties:
+                provider: { type: string, enum: [bkash, nagad] }
+                account_type: { type: string, enum: [personal, agent, merchant] }
+                mfs_number: { type: string }
+      responses:
+        "201":
+          description: Verification created; shows the platform number to pay
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OtpVerification"
+  /v1/onboarding/otp/{id}:
+    get:
+      tags: [onboarding]
+      summary: Poll verification status
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: |
+            status: pending -> verified (first payment profile auto-created,
+            is_otp_verified=true) or expired.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OtpVerification"
+  /rexio-admin/merchants:
+    get:
+      tags: [admin]
+      summary: List all merchants
+      parameters:
+        - name: limit
+          in: query
+          schema: { type: integer, default: 50, maximum: 100 }
+        - name: offset
+          in: query
+          schema: { type: integer, default: 0 }
+      responses:
+        "200":
+          description: Merchants with device_count and total_payments
+  /rexio-admin/merchants/{id}:
+    get:
+      tags: [admin]
+      summary: Merchant detail
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Merchant with device_count and total_sessions
+  /rexio-admin/merchants/{id}/plan:
+    post:
+      tags: [admin]
+      summary: Override plan tier (also the manual billing confirmation)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [plan_id]
+              properties:
+                plan_id: { type: string, enum: [starter, pro, business] }
+                plan_status: { type: string, default: active }
+                plan_renews_at: { type: string, format: date-time }
+      responses:
+        "200":
+          description: Updated; audit entry admin.plan_override written
+  /rexio-admin/merchants/{id}/disable:
+    post:
+      tags: [admin]
+      summary: Disable merchant (plan_status=disabled)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Disabled; audit entry admin.merchant_disable written
+  /rexio-admin/devices:
+    get:
+      tags: [admin]
+      summary: Global device health across all merchants
+      responses:
+        "200":
+          description: Devices (no secrets or pairing tokens)
+  /rexio-admin/sms/stats:
+    get:
+      tags: [admin]
+      summary: SMS parse stats (provider x parse_status per day, 30 days, Dhaka tz)
+      responses:
+        "200":
+          description: Stat rows
+  /rexio-admin/audit-logs:
+    get:
+      tags: [admin]
+      summary: Audit log viewer
+      parameters:
+        - name: merchant_id
+          in: query
+          schema: { type: string }
+        - name: action
+          in: query
+          schema: { type: string }
+        - name: entity
+          in: query
+          schema: { type: string }
+        - name: from
+          in: query
+          schema: { type: string, format: date-time }
+        - name: to
+          in: query
+          schema: { type: string, format: date-time }
+        - name: limit
+          in: query
+          schema: { type: integer, default: 50, maximum: 100 }
+        - name: offset
+          in: query
+          schema: { type: integer, default: 0 }
+      responses:
+        "200":
+          description: Audit rows
+  /rexio-admin/announcements:
+    get:
+      tags: [admin]
+      summary: List announcements
+      responses:
+        "200":
+          description: Announcements
+    post:
+      tags: [admin]
+      summary: Create announcement (broadcast banner to merchants)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title, body]
+              properties:
+                title: { type: string }
+                body: { type: string }
+                severity: { type: string, enum: [info, success, warning, error], default: info }
+                expires_at: { type: string, format: date-time, nullable: true }
+      responses:
+        "201":
+          description: Created
+  /rexio-admin/announcements/{id}:
+    patch:
+      tags: [admin]
+      summary: Update announcement
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Updated
+    delete:
+      tags: [admin]
+      summary: Delete announcement
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Deleted
 components:
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
-      description: "API key: rk_live_..."
+      description: Merchant API key, rk_live_...
+  parameters:
+    SessionID:
+      name: id
+      in: path
+      required: true
+      schema: { type: string }
+    ProfileID:
+      name: id
+      in: path
+      required: true
+      schema: { type: string }
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      schema: { type: string, maxLength: 255 }
+  responses:
+    NotFound:
+      description: Not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    PlanLimit:
+      description: Plan limit reached (HTTP 402)
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    DomainNotAllowed:
+      description: Domain not whitelisted (HTTP 403)
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
   schemas:
-    Session:
-      type: object
-      properties:
-        id: { type: string }
-        amount: { type: integer }
-        currency: { type: string, const: BDT }
-        status:
-          type: string
-          enum: [pending, succeeded, expired, canceled]
-        expires_at: { type: string, format: date-time }
-        created_at: { type: string, format: date-time }
-    Payment:
-      type: object
-      properties:
-        id: { type: string }
-        session_id: { type: string }
-        amount: { type: integer }
-        provider: { type: string }
-        trx_id: { type: string }
-        verified_at: { type: string, format: date-time }
     ErrorResponse:
       type: object
       properties:
@@ -148,3 +940,193 @@ components:
                 - internal_error
             message: { type: string }
             param: { type: string }
+    CheckoutSession:
+      type: object
+      properties:
+        id: { type: string }
+        amount: { type: integer, description: taka }
+        currency: { type: string }
+        status: { type: string, enum: [pending, succeeded, expired, canceled] }
+        needs_review: { type: boolean }
+        review_reason:
+          type: string
+          nullable: true
+          enum: [needs_trxid, late_match, amount_mismatch, balance_mismatch, short_payment]
+        expires_at: { type: string, format: date-time }
+        created_at: { type: string, format: date-time }
+        sender_number_claim: { type: string, nullable: true }
+        trx_id_claim: { type: string, nullable: true }
+        confirmed_at: { type: string, nullable: true }
+        merchant_name: { type: string }
+        merchant_logo_url: { type: string }
+        merchant_brand_color: { type: string }
+        merchant_support_email: { type: string }
+        merchant_support_phone: { type: string }
+        payment_profile_id: { type: string }
+    CreateSessionRequest:
+      type: object
+      required: [amount]
+      properties:
+        amount: { type: integer, minimum: 1, maximum: 1000000000, description: taka }
+        payment_profile_ids:
+          type: array
+          items: { type: string }
+          maxItems: 1
+          description: Exactly one profile is supported per session
+        payment_profile_id: { type: string, description: singular alias }
+        customer:
+          type: object
+          properties:
+            name: { type: string }
+            email: { type: string }
+            mobile: { type: string }
+        return_url: { type: string, format: uri }
+        cancel_url: { type: string, format: uri }
+        metadata: { type: object, additionalProperties: true }
+    Session:
+      type: object
+      properties:
+        id: { type: string }
+        amount: { type: integer }
+        currency: { type: string, const: BDT }
+        status: { type: string, enum: [pending, succeeded, expired, canceled] }
+        source: { type: string, enum: [api, payment_link, invoice] }
+        payment_profile_id: { type: string }
+        customer: { type: object, additionalProperties: true }
+        metadata: { type: object, additionalProperties: true }
+        needs_review: { type: boolean }
+        review_reason: { type: string, nullable: true }
+        expires_at: { type: string, format: date-time }
+        return_url: { type: string, nullable: true }
+        cancel_url: { type: string, nullable: true }
+        payment_link_id: { type: string, nullable: true }
+        checkout_url: { type: string, format: uri }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+    Payment:
+      type: object
+      properties:
+        id: { type: string }
+        session_id: { type: string }
+        sms_id: { type: string, nullable: true }
+        provider: { type: string, enum: [bkash, nagad] }
+        account_type: { type: string, enum: [personal, agent, merchant] }
+        sender_number: { type: string }
+        trx_id: { type: string }
+        amount: { type: integer }
+        balance_after: { type: integer, nullable: true }
+        verified_at: { type: string, format: date-time }
+        verification_source: { type: string }
+        is_refund_flagged: { type: boolean }
+        refund_note: { type: string, nullable: true }
+        created_at: { type: string, format: date-time }
+    PaymentLink:
+      type: object
+      properties:
+        id: { type: string }
+        payment_profile_id: { type: string }
+        title: { type: string }
+        amount: { type: integer, nullable: true }
+        reusable: { type: boolean }
+        active: { type: boolean }
+        expires_at: { type: string, format: date-time, nullable: true }
+        url: { type: string, format: uri }
+        created_at: { type: string, format: date-time }
+    PaymentProfile:
+      type: object
+      properties:
+        id: { type: string }
+        merchant_id: { type: string }
+        provider: { type: string, enum: [bkash, nagad] }
+        account_type: { type: string, enum: [personal, agent, merchant] }
+        mfs_number: { type: string }
+        display_name: { type: string }
+        device_id: { type: string, nullable: true }
+        sim_slot: { type: integer, nullable: true }
+        tracked_balance: { type: integer, nullable: true }
+        balance_verification: { type: boolean }
+        balance_last_synced_at: { type: string, format: date-time, nullable: true }
+        status: { type: string, enum: [active, disabled, pending] }
+        is_otp_verified: { type: boolean }
+        created_at: { type: string, format: date-time }
+    Device:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        model: { type: string }
+        android_version: { type: string }
+        app_version: { type: string }
+        status: { type: string, enum: [pending, active, offline, disabled] }
+        failed_sig_count: { type: integer }
+        last_heartbeat_at: { type: string, format: date-time, nullable: true }
+        last_sms_synced_at: { type: string, format: date-time, nullable: true }
+        pairing_token: { type: string, description: one-time, create/repair only }
+        pairing_expires_at: { type: string, format: date-time, nullable: true }
+        created_at: { type: string, format: date-time }
+    ApiKey:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        key_prefix: { type: string }
+        scopes: { type: string }
+        last_used_at: { type: string, format: date-time, nullable: true }
+        created_at: { type: string, format: date-time }
+        revoked_at: { type: string, format: date-time, nullable: true }
+        key: { type: string, description: raw key, create response only }
+    TeamMember:
+      type: object
+      properties:
+        merchant_id: { type: string }
+        user_id: { type: string }
+        role: { type: string, enum: [owner, admin, staff] }
+        invited_by: { type: string, nullable: true }
+        created_at: { type: string, format: date-time }
+    Merchant:
+      type: object
+      properties:
+        id: { type: string }
+        owner_user_id: { type: string }
+        name: { type: string }
+        slug: { type: string }
+        logo_url: { type: string }
+        favicon_url: { type: string }
+        brand_color: { type: string }
+        support_email: { type: string }
+        support_phone: { type: string }
+        plan_id: { type: string, enum: [starter, pro, business] }
+        plan_status: { type: string }
+        plan_renews_at: { type: string, format: date-time, nullable: true }
+        session_count_current_period: { type: integer }
+        settings: { $ref: "#/components/schemas/MerchantSettings" }
+        created_at: { type: string, format: date-time }
+    MerchantSettings:
+      type: object
+      properties:
+        claim_window_minutes: { type: integer, default: 10 }
+        session_ttl_minutes: { type: integer, default: 30, description: stored; session creation currently reads the server env only }
+        amount_tolerance: { type: integer, default: 0 }
+        auto_accept_late_match: { type: boolean, default: false }
+        balance_verification: { type: boolean, default: true }
+    DomainWhitelist:
+      type: object
+      properties:
+        id: { type: string }
+        merchant_id: { type: string }
+        domain: { type: string }
+        added_by: { type: string, nullable: true }
+        created_at: { type: string, format: date-time }
+    OtpVerification:
+      type: object
+      properties:
+        id: { type: string }
+        merchant_id: { type: string }
+        mfs_number: { type: string }
+        provider: { type: string }
+        account_type: { type: string }
+        status: { type: string, enum: [pending, verified, expired] }
+        created_at: { type: string, format: date-time }
+        expires_at: { type: string, format: date-time }
+        verification_number: { type: string, description: platform number to send 1 taka to }
+        amount: { type: integer }
