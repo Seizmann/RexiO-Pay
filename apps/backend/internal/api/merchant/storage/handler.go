@@ -6,10 +6,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/go-chi/chi/v5"
+
 	"github.com/Seizmann/RexiO-Pay/backend/internal/api/merchant/common"
 	"github.com/Seizmann/RexiO-Pay/backend/internal/apierr"
 	"github.com/Seizmann/RexiO-Pay/backend/internal/storage"
-	"github.com/go-chi/chi/v5"
 )
 
 type Handler struct{ store *storage.R2 }

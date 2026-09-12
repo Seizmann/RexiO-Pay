@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/go-chi/chi/v5"
+
 	"github.com/Seizmann/RexiO-Pay/backend/internal/api/merchant/common"
 	"github.com/Seizmann/RexiO-Pay/backend/internal/apierr"
 	"github.com/Seizmann/RexiO-Pay/backend/internal/billing"
@@ -13,7 +15,6 @@ import (
 	db "github.com/Seizmann/RexiO-Pay/backend/internal/db/sqlc"
 	"github.com/Seizmann/RexiO-Pay/backend/internal/idgen"
 	"github.com/Seizmann/RexiO-Pay/backend/internal/phone"
-	"github.com/go-chi/chi/v5"
 )
 
 type Handler struct {

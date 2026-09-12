@@ -1,6 +1,7 @@
 package webhooks
 
 import (
+	"context"
 	"encoding/json"
 	"testing"
 )
@@ -25,7 +26,7 @@ func TestSubscribes(t *testing.T) {
 }
 
 func TestEnqueueOptionsValidation(t *testing.T) {
-	if _, err := Enqueue(nil, nil, EnqueueOptions{}); err != ErrNoPool {
+	if _, err := Enqueue(context.Background(), nil, EnqueueOptions{}); err != ErrNoPool {
 		t.Fatalf("Enqueue(nil pool) error = %v, want %v", err, ErrNoPool)
 	}
 }

@@ -8,12 +8,13 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/go-chi/chi/v5"
+
 	"github.com/Seizmann/RexiO-Pay/backend/internal/apierr"
 	"github.com/Seizmann/RexiO-Pay/backend/internal/config"
 	dbpool "github.com/Seizmann/RexiO-Pay/backend/internal/db"
 	"github.com/Seizmann/RexiO-Pay/backend/internal/middleware"
 	otppkg "github.com/Seizmann/RexiO-Pay/backend/internal/otp"
-	"github.com/go-chi/chi/v5"
 )
 
 // Handler serves merchant-scoped onboarding OTP requests. Authentication and

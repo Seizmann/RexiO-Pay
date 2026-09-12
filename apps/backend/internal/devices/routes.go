@@ -1,11 +1,12 @@
 package devices
 
 import (
+	"github.com/go-chi/chi/v5"
+
 	"github.com/Seizmann/RexiO-Pay/backend/internal/config"
 	dbpkg "github.com/Seizmann/RexiO-Pay/backend/internal/db"
 	"github.com/Seizmann/RexiO-Pay/backend/internal/middleware"
 	"github.com/Seizmann/RexiO-Pay/backend/internal/telegram"
-	"github.com/go-chi/chi/v5"
 )
 
 // Routes wires the device API. Pairing is intentionally unauthenticated but

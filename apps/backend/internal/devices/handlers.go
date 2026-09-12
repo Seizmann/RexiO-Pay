@@ -10,6 +10,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/sqlc-dev/pqtype"
+
 	"github.com/Seizmann/RexiO-Pay/backend/internal/apierr"
 	cryptopkg "github.com/Seizmann/RexiO-Pay/backend/internal/crypto"
 	dbpkg "github.com/Seizmann/RexiO-Pay/backend/internal/db"
@@ -18,7 +20,6 @@ import (
 	"github.com/Seizmann/RexiO-Pay/backend/internal/middleware"
 	"github.com/Seizmann/RexiO-Pay/backend/internal/sms"
 	"github.com/Seizmann/RexiO-Pay/backend/internal/telegram"
-	"github.com/sqlc-dev/pqtype"
 )
 
 // AuthMiddleware authenticates all device endpoints using the same headers and

@@ -12,6 +12,9 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/go-chi/chi/v5"
+	chimiddleware "github.com/go-chi/chi/v5/middleware"
+
 	adminapi "github.com/Seizmann/RexiO-Pay/backend/internal/api/admin"
 	merchantapi "github.com/Seizmann/RexiO-Pay/backend/internal/api/merchant"
 	merchantapikeys "github.com/Seizmann/RexiO-Pay/backend/internal/api/merchant/apikeys"
@@ -33,8 +36,6 @@ import (
 	"github.com/Seizmann/RexiO-Pay/backend/internal/storage"
 	"github.com/Seizmann/RexiO-Pay/backend/internal/telegram"
 	"github.com/Seizmann/RexiO-Pay/backend/internal/webhooks"
-	"github.com/go-chi/chi/v5"
-	chimiddleware "github.com/go-chi/chi/v5/middleware"
 )
 
 const (

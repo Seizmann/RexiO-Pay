@@ -11,6 +11,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/sqlc-dev/pqtype"
+
 	"github.com/Seizmann/RexiO-Pay/backend/internal/config"
 	dbpkg "github.com/Seizmann/RexiO-Pay/backend/internal/db"
 	dbsqlc "github.com/Seizmann/RexiO-Pay/backend/internal/db/sqlc"
@@ -18,7 +20,6 @@ import (
 	"github.com/Seizmann/RexiO-Pay/backend/internal/phone"
 	"github.com/Seizmann/RexiO-Pay/backend/internal/telegram"
 	"github.com/Seizmann/RexiO-Pay/backend/internal/webhooks"
-	"github.com/sqlc-dev/pqtype"
 )
 
 const (

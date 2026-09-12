@@ -10,12 +10,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/go-chi/chi/v5"
+
 	"github.com/Seizmann/RexiO-Pay/backend/internal/apierr"
 	dbpkg "github.com/Seizmann/RexiO-Pay/backend/internal/db"
 	db "github.com/Seizmann/RexiO-Pay/backend/internal/db/sqlc"
 	"github.com/Seizmann/RexiO-Pay/backend/internal/idgen"
 	"github.com/Seizmann/RexiO-Pay/backend/internal/middleware"
-	"github.com/go-chi/chi/v5"
 )
 
 const (

@@ -17,6 +17,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/go-chi/chi/v5"
+
 	"github.com/Seizmann/RexiO-Pay/backend/internal/api/merchant/apikeys"
 	"github.com/Seizmann/RexiO-Pay/backend/internal/api/merchant/branding"
 	"github.com/Seizmann/RexiO-Pay/backend/internal/api/merchant/devices"
@@ -32,7 +34,6 @@ import (
 	"github.com/Seizmann/RexiO-Pay/backend/internal/idempotency"
 	"github.com/Seizmann/RexiO-Pay/backend/internal/middleware"
 	storager2 "github.com/Seizmann/RexiO-Pay/backend/internal/storage"
-	"github.com/go-chi/chi/v5"
 )
 
 const (

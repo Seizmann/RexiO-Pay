@@ -5,12 +5,13 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/go-chi/chi/v5"
+
 	"github.com/Seizmann/RexiO-Pay/backend/internal/api/merchant/common"
 	"github.com/Seizmann/RexiO-Pay/backend/internal/apierr"
 	dbpkg "github.com/Seizmann/RexiO-Pay/backend/internal/db"
 	db "github.com/Seizmann/RexiO-Pay/backend/internal/db/sqlc"
 	"github.com/Seizmann/RexiO-Pay/backend/internal/phone"
-	"github.com/go-chi/chi/v5"
 )
 
 type Handler struct{ queries *db.Queries }

@@ -7,11 +7,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/go-chi/chi/v5"
+
 	"github.com/Seizmann/RexiO-Pay/backend/internal/apierr"
 	dbsqlc "github.com/Seizmann/RexiO-Pay/backend/internal/db/sqlc"
 	"github.com/Seizmann/RexiO-Pay/backend/internal/idempotency"
 	"github.com/Seizmann/RexiO-Pay/backend/internal/idgen"
-	"github.com/go-chi/chi/v5"
 )
 
 type createSessionRequest struct {

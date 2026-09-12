@@ -5,9 +5,10 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/go-chi/chi/v5"
+
 	"github.com/Seizmann/RexiO-Pay/backend/internal/apierr"
 	"github.com/Seizmann/RexiO-Pay/backend/internal/middleware"
-	"github.com/go-chi/chi/v5"
 )
 
 // MerchantID returns the merchant authenticated by APIKeyAuth.

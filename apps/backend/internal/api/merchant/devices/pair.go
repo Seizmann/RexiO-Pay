@@ -6,12 +6,13 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/go-chi/chi/v5"
+
 	"github.com/Seizmann/RexiO-Pay/backend/internal/api/merchant/common"
 	"github.com/Seizmann/RexiO-Pay/backend/internal/apierr"
 	devicecrypto "github.com/Seizmann/RexiO-Pay/backend/internal/crypto"
 	dbpkg "github.com/Seizmann/RexiO-Pay/backend/internal/db"
 	db "github.com/Seizmann/RexiO-Pay/backend/internal/db/sqlc"
-	"github.com/go-chi/chi/v5"
 )
 
 // PairHandler handles the unauthenticated device pairing exchange. The pairing
