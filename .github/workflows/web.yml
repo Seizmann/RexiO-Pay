@@ -22,3 +22,6 @@ jobs:
       - run: pnpm --filter @rexio-pay/web typecheck
       - run: pnpm --filter @rexio-pay/web lint
       - run: pnpm --filter @rexio-pay/web build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: "https://mock.supabase.co"
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: "mock-key"
