@@ -150,6 +150,72 @@ export const en = {
     sessionFailed:
       "We could not load this page. Check your connection and try again.",
   },
+  marketing: {
+    navProduct: "Product",
+    navPricing: "Pricing",
+    navDocs: "API docs",
+    navFaq: "FAQ",
+    navSignIn: "Sign in",
+    navGetStarted: "Get started",
+    heroEyebrow: "A SpritexAI product",
+    heroTitle: "Take bKash and Nagad payments, verified automatically",
+    heroBody:
+      "RexiO Pay checks every payment SMS from your own phone and tells your site the moment the money arrives. No MFS API contract, no manual checking.",
+    heroCta: "Start for free",
+    heroSecondary: "Read the API docs",
+    howTitle: "How it works",
+    howStep1Title: "Create a payment request",
+    howStep1Body:
+      "Your site calls the RexiO Pay API and the customer lands on a payment page with your branding.",
+    howStep2Title: "The customer pays your number",
+    howStep2Body:
+      "The customer sends money from their bKash or Nagad app to your own MFS number. The money goes straight to you.",
+    howStep3Title: "Your phone confirms it",
+    howStep3Body:
+      "The RexiO Pay Engine app on your phone reads the payment SMS and forwards it, signed, to RexiO Pay.",
+    howStep4Title: "Your site hears back instantly",
+    howStep4Body:
+      "RexiO Pay matches the SMS to the payment request and fires a signed webhook to your site within seconds.",
+    pricingTitle: "Plans",
+    pricingBody:
+      "Flat monthly price. No per-transaction fee. Pay by bKash, confirmed manually while automated billing is on the way.",
+    planStarterNote: "For trying things out",
+    planProNote: "For growing shops",
+    planBusinessNote: "For high volume",
+    perMonth: "/month",
+    unlimited: "Unlimited",
+    profilesLimit: "Payment profiles",
+    devicesLimit: "Devices",
+    sessionsLimit: "Checkout sessions / month",
+    webhooksLimit: "Webhook endpoints",
+    teamLimit: "Team members",
+    choosePlan: "Get started",
+    faqTitle: "Questions people ask",
+    faq1Q: "Do you hold my money?",
+    faq1A:
+      "No. Payments go directly from your customer's MFS account to yours. RexiO Pay never holds, moves, or pools funds. It only reads the payment confirmation SMS and tells your site about it.",
+    faq2Q: "Do I need a bKash or Nagad merchant contract?",
+    faq2A:
+      "No. RexiO Pay works with your existing personal, agent, or merchant MFS account. You are responsible for using it in line with your provider's terms.",
+    faq3Q: "What if my phone is offline?",
+    faq3A:
+      "The app stores unsent SMS and forwards them when you are back online, so payments taken while offline are still verified after reconnecting.",
+    faq4Q: "How does RexiO Pay know a payment is real?",
+    faq4A:
+      "It matches the SMS against the pending payment request using the transaction ID, the sender number, and the time window. A balance check can also flag fabricated SMS before they cause trouble.",
+    faq5Q: "Which providers are supported?",
+    faq5A:
+      "bKash and Nagad today, for personal, agent, and merchant account types. More providers are planned.",
+    disclaimerTitle: "About compliance",
+    disclaimerBody:
+      "RexiO Pay does not hold, move, or pool merchant funds. All money moves directly from the customer to the merchant's own MFS account. RexiO Pay is a verification and automation layer over payments merchants already receive. Every merchant uses their own MFS account and is responsible for compliance with their MFS provider's terms and Bangladesh Bank regulations. Payment aggregation as a licensed PSP/PSO is out of scope. MFS providers may flag or suspend personal accounts that receive high volumes of small payments, so understand your account type's limits.",
+    footerDocs: "API docs",
+    footerStatus: "Status",
+    footerTerms: "Terms",
+    footerPrivacy: "Privacy",
+    footerOrg: "Organization",
+    footerProduct: "Product",
+  },
 } as const;
 
 /** Structural shape of the dictionary with plain string leaves. */
