@@ -17,12 +17,21 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Seizmann/RexiO-Pay/backend/internal/api/merchant/apikeys"
+	"github.com/Seizmann/RexiO-Pay/backend/internal/api/merchant/branding"
+	"github.com/Seizmann/RexiO-Pay/backend/internal/api/merchant/devices"
+	"github.com/Seizmann/RexiO-Pay/backend/internal/api/merchant/domains"
+	"github.com/Seizmann/RexiO-Pay/backend/internal/api/merchant/paymentprofiles"
+	merchantsettings "github.com/Seizmann/RexiO-Pay/backend/internal/api/merchant/settings"
+	merchantstorage "github.com/Seizmann/RexiO-Pay/backend/internal/api/merchant/storage"
+	"github.com/Seizmann/RexiO-Pay/backend/internal/api/merchant/teammembers"
 	"github.com/Seizmann/RexiO-Pay/backend/internal/apierr"
 	"github.com/Seizmann/RexiO-Pay/backend/internal/billing"
 	dbpkg "github.com/Seizmann/RexiO-Pay/backend/internal/db"
 	dbsqlc "github.com/Seizmann/RexiO-Pay/backend/internal/db/sqlc"
 	"github.com/Seizmann/RexiO-Pay/backend/internal/idempotency"
 	"github.com/Seizmann/RexiO-Pay/backend/internal/middleware"
+	storager2 "github.com/Seizmann/RexiO-Pay/backend/internal/storage"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -35,15 +44,27 @@ const (
 // to build checkout URLs and may be left empty when the handler is mounted
 // behind a reverse proxy (the relative URL is then returned).
 type Handler struct {
-	Pool       *dbpkg.Pool
-	AppURL     string
-	SessionTTL time.Duration
-	Billing    *billing.Limiter
+	Pool                *dbpkg.Pool
+	AppURL              string
+	SessionTTL          time.Duration
+	Billing             *billing.Limiter
+	Storage             *storager2.R2
+	DeviceEncryptionKey []byte
 }
 
 // NewHandler constructs a merchant API handler with the default session TTL.
 func NewHandler(pool *dbpkg.Pool) *Handler {
 	return &Handler{Pool: pool, SessionTTL: defaultSessionTTL, Billing: billing.New(pool)}
+}
+
+// NewHandlerWithDependencies constructs a merchant API handler and supplies the
+// dependencies needed by the storage and device-pairing routes. NewHandler is
+// kept for callers that do not enable those integrations.
+func NewHandlerWithDependencies(pool *dbpkg.Pool, store *storager2.R2, deviceEncryptionKey []byte) *Handler {
+	h := NewHandler(pool)
+	h.Storage = store
+	h.DeviceEncryptionKey = deviceEncryptionKey
+	return h
 }
 
 // New is kept as a short constructor for callers that use package-level
@@ -55,10 +76,13 @@ func New(pool *dbpkg.Pool) *Handler { return NewHandler(pool) }
 func (h *Handler) Routes() chi.Router {
 	r := chi.NewRouter()
 
-	// Checkout routes intentionally precede the API-key middleware: customers
-	// do not have merchant credentials.
+	// Checkout and device pairing routes intentionally precede the API-key
+	// middleware: customers and newly paired devices do not have merchant API
+	// credentials yet.
 	r.Get("/v1/checkout/{id}", h.getCheckout)
 	r.Post("/v1/checkout/{id}/claim", h.claimCheckout)
+	pair := devices.NewPairHandler(h.Pool, h.DeviceEncryptionKey)
+	r.Mount("/v1/device/pair", pair.Routes())
 
 	r.Route("/v1", func(r chi.Router) {
 		r.Use(middleware.APIKeyAuth(h.Pool))
@@ -70,6 +94,19 @@ func (h *Handler) Routes() chi.Router {
 		r.Post("/payment-links", h.createPaymentLink)
 		r.Get("/payment-links", h.listPaymentLinks)
 		r.Get("/payment-links/{id}", h.getPaymentLink)
+
+		// Merchant dashboard resources all require API-key authentication. The
+		// subhandlers scope every query to the merchant in the auth context.
+		r.Mount("/paymentprofiles", paymentprofiles.NewHandler(h.Pool).Routes())
+		r.Mount("/apikeys", apikeys.NewHandler(h.Pool).Routes())
+		r.Mount("/devices", devices.NewHandler(h.Pool).Routes())
+		r.Mount("/teammembers", teammembers.NewHandler(h.Pool).Routes())
+		r.Mount("/branding", branding.NewHandler(h.Pool).Routes())
+		r.Mount("/settings", merchantsettings.NewHandler(h.Pool).Routes())
+		r.Mount("/domains", domains.NewHandler(h.Pool).Routes())
+		if h.Storage != nil {
+			r.Mount("/storage", merchantstorage.NewHandler(h.Storage).Routes())
+		}
 	})
 	return r
 }

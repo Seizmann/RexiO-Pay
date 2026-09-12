@@ -108,8 +108,12 @@ func (h *PairHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		apierr.Internal(w, err)
 		return
 	}
-	// Model/version metadata is intentionally best-effort only when no generated
-	// update query exists; pairing still atomically consumes the token.
+	if err := q.UpdateDeviceMetadata(r.Context(), db.UpdateDeviceMetadataParams{
+		ID: device.ID, Name: req.DeviceName, Model: req.Model, AndroidVersion: req.AndroidVersion, AppVersion: req.AppVersion,
+	}); err != nil {
+		apierr.Internal(w, err)
+		return
+	}
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(PairResponse{DeviceID: device.ID, DeviceSecret: base64.RawURLEncoding.EncodeToString(secret), Status: "active"})
 }

@@ -28,6 +28,7 @@ func Routes(pool *dbpkg.Pool, cfg *config.Config, tg *telegram.Alerter, parser P
 	protected := chi.NewRouter()
 	protected.Use(middleware.ReadBody)
 	protected.Use(auth.Middleware)
+	protected.Use(middleware.DeviceRateLimit)
 	protected.Post("/sms", NewSMSHandler(pool, parser).ServeHTTP)
 	protected.Post("/heartbeat", (&HeartbeatHandler{Pool: pool}).ServeHTTP)
 	protected.Get("/config", configHandler.ServeHTTP)

@@ -12,6 +12,9 @@ import (
 
 	"github.com/Seizmann/RexiO-Pay/backend/internal/config"
 	dbpool "github.com/Seizmann/RexiO-Pay/backend/internal/db"
+	devpkg "github.com/Seizmann/RexiO-Pay/backend/internal/devices"
+	"github.com/Seizmann/RexiO-Pay/backend/internal/sms"
+	"github.com/Seizmann/RexiO-Pay/backend/internal/telegram"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 )
@@ -46,6 +49,11 @@ func main() {
 		w.WriteHeader(status)
 		_, _ = w.Write([]byte(`{"status":"ok","db":"` + dbStatus + `"}`))
 	})
+
+	tg := telegram.New(cfg.TelegramBotToken, cfg.TelegramAdminChatID)
+	deviceParser := devpkg.SMSParserAdapter{Parser: sms.New()}
+	r.Mount("/v1/device", devpkg.Routes(pool, cfg, tg, deviceParser))
+	go (&devpkg.OfflineMonitor{Pool: pool, Telegram: tg}).Run(context.Background())
 
 	srv := &http.Server{
 		Addr:              ":" + cfg.Port,
