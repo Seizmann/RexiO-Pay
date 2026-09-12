@@ -6,7 +6,9 @@ services:
   backend:
     build: ./apps/backend
     restart: unless-stopped
-    env_file: /srv/rexio-pay/backend.env   # populated from SECRETS.md (REQUIREMENT §7)
+    env_file:
+      - path: /srv/rexio-pay/backend.env
+        required: false # VPS secret file; local override supplies ./apps/backend/.env
     expose:
       - "8080"
     healthcheck:

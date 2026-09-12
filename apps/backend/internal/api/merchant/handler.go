@@ -104,9 +104,7 @@ func (h *Handler) Routes() chi.Router {
 		r.Mount("/branding", branding.NewHandler(h.Pool).Routes())
 		r.Mount("/settings", merchantsettings.NewHandler(h.Pool).Routes())
 		r.Mount("/domains", domains.NewHandler(h.Pool).Routes())
-		if h.Storage != nil {
-			r.Mount("/storage", merchantstorage.NewHandler(h.Storage).Routes())
-		}
+		r.Mount("/storage", merchantstorage.NewHandler(h.Storage).Routes())
 	})
 	return r
 }

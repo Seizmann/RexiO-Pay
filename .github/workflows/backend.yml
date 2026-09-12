@@ -34,11 +34,11 @@ jobs:
 
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.22"
+          go-version-file: apps/backend/go.mod
+          cache: true
           cache-dependency-path: apps/backend/go.sum
 
       - name: Install migrate CLI
-        working-directory: .
         run: go install -tags 'pgx5' github.com/golang-migrate/migrate/v4/cmd/migrate@v4.20.1
 
       - name: Run migrations
@@ -53,6 +53,9 @@ jobs:
         run: go vet ./...
 
       - name: Go tests
+        run: go test -count=1 ./...
+
+      - name: Go tests with race detector
         env:
           TEST_DATABASE_URL: postgres://postgres:test@localhost:5432/rexio_test?sslmode=disable
         run: go test -race -count=1 ./...
