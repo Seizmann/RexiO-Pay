@@ -5,19 +5,93 @@
   Keep in sync with DESIGN.md; do not alter without user instruction.
 */
 @theme {
+  /* Brand & accent */
   --color-primary: #533afd;
   --color-primary-deep: #4434d4;
   --color-primary-press: #2e2b8c;
-  --color-brand-dark: #1c1e54;
+  --color-primary-soft: #665efd;
+  --color-primary-bg-subdued-hover: #b9b9f9;
+  --color-brand-dark-900: #1c1e54;
+  --color-ruby: #ea2261;
+  --color-magenta: #f96bee;
+  --color-lemon: #9b6829;
+  --color-shadow-blue: #003770;
+
+  /* Surfaces */
+  --color-canvas: #ffffff;
+  --color-canvas-soft: #f6f9fc;
+  --color-canvas-cream: #f5e9d4;
+  --color-hairline: #e3e8ee;
+  --color-hairline-input: #a8c3de;
+
+  /* Text */
   --color-ink: #0d253d;
   --color-ink-secondary: #273951;
   --color-ink-mute: #64748d;
-  --color-canvas: #ffffff;
-  --color-canvas-soft: #f6f9fc;
-  --color-hairline: #e3e8ee;
+  --color-ink-mute-2: #61718a;
+  --color-on-primary: #ffffff;
 
-  --font-display:
-    "Inter", "SF Pro Display", system-ui, -apple-system, sans-serif;
+  /* Fonts: Inter is the open-source stand-in for the proprietary Sohne.
+     Noto Sans Bengali covers bn glyphs Inter does not ship. */
+  --font-sans: var(--font-inter), var(--font-bengali), "SF Pro Display",
+    system-ui, -apple-system, sans-serif;
+  --font-display: var(--font-inter), "SF Pro Display", system-ui,
+    -apple-system, sans-serif;
+
+  /* Radius scale */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-pill: 9999px;
+
+  /* Typography scale (DESIGN.md typography.*) */
+  --text-display-xxl: 56px;
+  --text-display-xxl--line-height: 1.03;
+  --text-display-xxl--letter-spacing: -1.4px;
+  --text-display-xl: 48px;
+  --text-display-xl--line-height: 1.15;
+  --text-display-xl--letter-spacing: -0.96px;
+  --text-display-lg: 32px;
+  --text-display-lg--line-height: 1.1;
+  --text-display-lg--letter-spacing: -0.64px;
+  --text-display-md: 26px;
+  --text-display-md--line-height: 1.12;
+  --text-display-md--letter-spacing: -0.26px;
+  --text-heading-lg: 22px;
+  --text-heading-lg--line-height: 1.1;
+  --text-heading-lg--letter-spacing: -0.22px;
+  --text-heading-md: 20px;
+  --text-heading-md--line-height: 1.4;
+  --text-heading-md--letter-spacing: -0.2px;
+  --text-heading-sm: 18px;
+  --text-heading-sm--line-height: 1.4;
+  --text-heading-sm--letter-spacing: 0;
+  --text-body-lg: 16px;
+  --text-body-lg--line-height: 1.4;
+  --text-body-md: 15px;
+  --text-body-md--line-height: 1.4;
+  --text-body-tabular: 14px;
+  --text-body-tabular--line-height: 1.4;
+  --text-body-tabular--letter-spacing: -0.42px;
+  --text-button-md: 16px;
+  --text-button-md--line-height: 1;
+  --text-button-sm: 14px;
+  --text-button-sm--line-height: 1;
+  --text-caption: 13px;
+  --text-caption--line-height: 1.4;
+  --text-caption--letter-spacing: -0.39px;
+  --text-micro: 11px;
+  --text-micro--line-height: 1.4;
+  --text-micro-cap: 10px;
+  --text-micro-cap--line-height: 1.15;
+  --text-micro-cap--letter-spacing: 0.1px;
+
+  /* Elevation */
+  --shadow-level-1: rgba(0, 55, 112, 0.08) 0 1px 3px;
+  --shadow-level-2:
+    rgba(0, 55, 112, 0.08) 0 8px 24px, rgba(0, 55, 112, 0.04) 0 2px 6px;
 }
 
 /*

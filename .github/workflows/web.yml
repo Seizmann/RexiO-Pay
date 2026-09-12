@@ -20,4 +20,5 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @rexio-pay/web typecheck
+      - run: pnpm --filter @rexio-pay/web lint
       - run: pnpm --filter @rexio-pay/web build
