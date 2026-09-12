@@ -33,6 +33,14 @@ SET last_heartbeat_at = now(),
     app_version       = $2
 WHERE id = $1;
 
+-- name: UpdateDeviceMetadata :exec
+UPDATE public.devices
+SET name            = COALESCE(NULLIF(sqlc.arg(name), ''), name),
+    model           = COALESCE(NULLIF(sqlc.arg(model), ''), model),
+    android_version = COALESCE(NULLIF(sqlc.arg(android_version), ''), android_version),
+    app_version     = COALESCE(NULLIF(sqlc.arg(app_version), ''), app_version)
+WHERE id = $1;
+
 -- name: UpdateLastSMSSynced :exec
 UPDATE public.devices SET last_sms_synced_at = now() WHERE id = $1;
 

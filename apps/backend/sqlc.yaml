@@ -15,5 +15,3 @@ sql:
             go_type: "time.Time"
           - db_type: "jsonb"
             go_type: "encoding/json.RawMessage"
-          - db_type: "bytea"
-            go_type: "[]byte"

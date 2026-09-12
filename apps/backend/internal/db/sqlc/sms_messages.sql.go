@@ -17,7 +17,7 @@ const findDuplicateTrxID = `-- name: FindDuplicateTrxID :one
 SELECT id FROM public.sms_messages
 WHERE provider     = $1
   AND parse_status = 'parsed'
-  AND parsed->>'trx_id' = $2
+  AND parsed->>'trx_id' = $2::text
 LIMIT 1
 `
 
@@ -37,8 +37,8 @@ const getHeldSMSForProfile = `-- name: GetHeldSMSForProfile :many
 SELECT id, merchant_id, device_id, payment_profile_id, provider, account_type, raw_text, parsed, parse_status, match_status, matched_session_id, source, sim_slot, received_at, created_at FROM public.sms_messages
 WHERE payment_profile_id = $1
   AND match_status       = 'held'
-  AND parsed->>'sender_number' = $2
-  AND (parsed->>'amount')::bigint = $3
+  AND parsed->>'sender_number' = $2::text
+  AND (parsed->>'amount')::bigint = $3::bigint
 ORDER BY received_at ASC
 `
 

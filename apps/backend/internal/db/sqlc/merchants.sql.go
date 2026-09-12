@@ -12,6 +12,17 @@ import (
 	"time"
 )
 
+const disableMerchant = `-- name: DisableMerchant :exec
+UPDATE public.merchants
+SET plan_status = 'disabled'
+WHERE id = $1
+`
+
+func (q *Queries) DisableMerchant(ctx context.Context, id string) error {
+	_, err := q.db.ExecContext(ctx, disableMerchant, id)
+	return err
+}
+
 const getMerchant = `-- name: GetMerchant :one
 SELECT id, owner_user_id, name, slug, logo_url, favicon_url, brand_color, support_email, support_phone, plan_id, plan_status, plan_renews_at, session_count_current_period, settings, created_at FROM public.merchants WHERE id = $1 LIMIT 1
 `
@@ -128,17 +139,6 @@ func (q *Queries) GetPlan(ctx context.Context, code string) (Plan, error) {
 	var i Plan
 	err := row.Scan(&i.Code, &i.PriceBdtMonthly, &i.Limits)
 	return i, err
-}
-
-const disableMerchant = `-- name: DisableMerchant :exec
-UPDATE public.merchants
-SET plan_status = 'disabled'
-WHERE id = $1
-`
-
-func (q *Queries) DisableMerchant(ctx context.Context, id string) error {
-	_, err := q.db.ExecContext(ctx, disableMerchant, id)
-	return err
 }
 
 const listMerchantsAdmin = `-- name: ListMerchantsAdmin :many

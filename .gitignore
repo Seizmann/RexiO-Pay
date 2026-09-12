@@ -68,4 +68,4 @@ Thumbs.db
 *.log
 npm-debug.log*
 pnpm-debug.log*
-apps/backend/server/
+apps/backend/server

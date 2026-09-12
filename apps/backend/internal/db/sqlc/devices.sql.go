@@ -345,6 +345,34 @@ func (q *Queries) StorePairedDevice(ctx context.Context, arg StorePairedDevicePa
 	return err
 }
 
+const updateDeviceMetadata = `-- name: UpdateDeviceMetadata :exec
+UPDATE public.devices
+SET name            = COALESCE(NULLIF($2, ''), name),
+    model           = COALESCE(NULLIF($3, ''), model),
+    android_version = COALESCE(NULLIF($4, ''), android_version),
+    app_version     = COALESCE(NULLIF($5, ''), app_version)
+WHERE id = $1
+`
+
+type UpdateDeviceMetadataParams struct {
+	ID             string      `json:"id"`
+	Name           interface{} `json:"name"`
+	Model          interface{} `json:"model"`
+	AndroidVersion interface{} `json:"android_version"`
+	AppVersion     interface{} `json:"app_version"`
+}
+
+func (q *Queries) UpdateDeviceMetadata(ctx context.Context, arg UpdateDeviceMetadataParams) error {
+	_, err := q.db.ExecContext(ctx, updateDeviceMetadata,
+		arg.ID,
+		arg.Name,
+		arg.Model,
+		arg.AndroidVersion,
+		arg.AppVersion,
+	)
+	return err
+}
+
 const updateDeviceStatus = `-- name: UpdateDeviceStatus :exec
 UPDATE public.devices SET status = $2 WHERE id = $1
 `
