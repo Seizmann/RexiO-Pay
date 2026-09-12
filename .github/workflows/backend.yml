@@ -1,11 +1,12 @@
 name: backend
 
 on:
+  workflow_dispatch:
   push:
     branches: [main]
-    paths: ["apps/backend/**", "supabase/**"]
+    paths: ["apps/backend/**", "supabase/**", ".github/workflows/backend.yml"]
   pull_request:
-    paths: ["apps/backend/**", "supabase/**"]
+    paths: ["apps/backend/**", "supabase/**", ".github/workflows/backend.yml"]
 
 defaults:
   run:

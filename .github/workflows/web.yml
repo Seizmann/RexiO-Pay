@@ -1,11 +1,12 @@
 name: web
 
 on:
+  workflow_dispatch:
   push:
     branches: [main]
-    paths: ["apps/web/**", "packages/**"]
+    paths: ["apps/web/**", "packages/**", ".github/workflows/web.yml"]
   pull_request:
-    paths: ["apps/web/**", "packages/**"]
+    paths: ["apps/web/**", "packages/**", ".github/workflows/web.yml"]
 
 jobs:
   build:
