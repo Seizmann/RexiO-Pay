@@ -7,6 +7,8 @@ import { formatTaka } from "@/lib/money";
 import { MarketingNav } from "@/components/marketing/nav";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { JsonLd } from "@/components/json-ld";
+import { landingJsonLd } from "@/lib/seo/jsonld";
 
 /**
  * Landing page (REQUIREMENT §14 Marketing, M9).
@@ -64,6 +66,7 @@ export default function LandingPage() {
 
   return (
     <>
+      <JsonLd data={landingJsonLd(faqs)} />
       <MarketingNav />
 
       {/* Hero — gradient mesh occupies the upper third (DESIGN.md) */}
