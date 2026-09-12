@@ -103,6 +103,53 @@ export const en = {
     domains: "Domain whitelist",
     settings: "Settings",
   },
+  checkout: {
+    pay: "Pay",
+    amount: "Amount",
+    timeLeft: "Time left",
+    expired: "This payment request has expired.",
+    expiredHelp: "Contact the merchant to get a new payment request.",
+    canceled: "This payment was canceled.",
+    notFound: "We could not find this payment request.",
+    notFoundHelp: "Check the link, or contact the merchant.",
+    payTo: "Pay to",
+    providerPersonal: "Personal",
+    providerAgent: "Agent",
+    providerMerchant: "Merchant",
+    senderNumber: "Your bKash/Nagad number",
+    senderNumberHint: "The number you will pay from.",
+    senderNumberInvalid: "Enter a valid Bangladeshi mobile number.",
+    instructionsTitle: "How to pay",
+    step1: "Open your {provider} app",
+    step2: "Send Money to {number}",
+    step3: "Enter the exact amount {amount}",
+    step4: "Confirm with your PIN",
+    copyNumber: "Copy number",
+    copyAmount: "Copy amount",
+    paidQuestion: "Have you paid?",
+    paidButton: "I have paid",
+    paidInfo:
+      "Tap after you have sent the money. Verification usually takes a few seconds.",
+    trxidLabel: "Transaction ID (optional)",
+    trxidHint: "Find it in your {provider} app history.",
+    trxidRequired:
+      "This merchant needs the Transaction ID for this payment. Please enter it.",
+    reviewTitle: "Verification is taking longer than usual",
+    reviewBody:
+      "We have your payment confirmation. The merchant will confirm it shortly. You can close this page.",
+    successTitle: "Payment received",
+    successBody: "Your payment is confirmed. You can close this page now.",
+    redirecting: "Taking you back to {merchant}…",
+    support: "Need help? Contact {merchant}",
+    poweredBy: "Powered by RexiO Pay",
+    maintenanceTitle: "Payments are temporarily unavailable",
+    maintenanceBody:
+      "The merchant has disabled payments for now. Please try again later.",
+    fallbackBody:
+      "Open your bKash or Nagad app and send the exact amount to the merchant's number. Copy the amount below to avoid mistakes.",
+    sessionFailed:
+      "We could not load this page. Check your connection and try again.",
+  },
 } as const;
 
 /** Structural shape of the dictionary with plain string leaves. */

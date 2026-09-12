@@ -16,9 +16,9 @@ const BACKEND_URL =
 
 const FORWARDED_HEADERS = ["idempotency-key", "content-type"];
 
-function buildHeaders(req: NextRequest, apiKey: string): Headers {
+function buildHeaders(req: NextRequest, apiKey: string | undefined): Headers {
   const headers = new Headers();
-  headers.set("Authorization", `Bearer ${apiKey}`);
+  if (apiKey) headers.set("Authorization", `Bearer ${apiKey}`);
   for (const name of FORWARDED_HEADERS) {
     const value = req.headers.get(name);
     if (value) headers.set(name, value);
@@ -33,9 +33,12 @@ async function proxy(req: NextRequest, path: string[]): Promise<Response> {
       { status: 500 },
     );
   }
+  const isPublic =
+    path[0] === "checkout" || (path[0] === "device" && path[1] === "pair");
+
   const cookieStore = await cookies();
   const apiKey = cookieStore.get(BACKEND_KEY_COOKIE)?.value;
-  if (!apiKey) {
+  if (!apiKey && !isPublic) {
     return Response.json(
       { error: { code: "unauthorized", message: "Not connected to the RexiO Pay API" } },
       { status: 401 },
