@@ -1,0 +1,10 @@
+.gradle/
+build/
+.kotlin/
+local.properties
+captures/
+.externalNativeBuild/
+.cxx/
+# Keystores must never enter git — CI reads them from repo secrets.
+*.keystore
+*.jks

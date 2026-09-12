@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lint>
+    <!-- Library and AGP version-bump suggestions: intentional pinned versions. -->
+    <issue id="GradleDependency" severity="ignore" />
+    <issue id="AndroidGradlePluginVersion" severity="ignore" />
+    <issue id="OldTargetApi" severity="ignore" />
+    <!-- REQUEST_IGNORE_BATTERY_OPTIMIZATIONS is used in the settings guide,
+         not auto-requested, with an explicit user-facing rationale screen.
+         This app is distributed by sideload only, not the Play Store. -->
+    <issue id="BatteryLife" severity="ignore" />
+    <!-- CameraX uses @ExperimentalGetImage as an API-stability marker; the
+         ImageProxy.image access in QrScanner.processFrame is intentional and
+         annotated with @OptIn(ExperimentalGetImage::class). Lint cannot resolve
+         the opt-in through the Executor lambda boundary, so suppress here. -->
+    <issue id="UnsafeOptInUsageError" severity="ignore" />
+</lint>
