@@ -345,12 +345,19 @@ export interface SmsMessage {
 
 // ── Admin API ──────────────────────────────────────────────────────────────
 
+/**
+ * Admin merchant list row: flat merchant fields joined with device_count /
+ * total_payments (list) or total_sessions (detail), per admin.go.
+ */
 export interface AdminMerchantRow {
-  // merchant row joined with device_count / total_payments (list) or total_sessions (detail)
-  merchant: Merchant;
+  id: string;
+  name: string;
+  plan_id: PlanCode;
+  plan_status: string;
   device_count: number;
   total_payments: number;
   total_sessions?: number;
+  session_count_current_period?: number;
 }
 
 export interface SmsStatRow {
