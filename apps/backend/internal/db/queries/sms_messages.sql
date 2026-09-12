@@ -25,7 +25,7 @@ WHERE id = $1;
 SELECT id FROM public.sms_messages
 WHERE provider     = $1
   AND parse_status = 'parsed'
-  AND parsed->>'trx_id' = $2
+  AND parsed->>'trx_id' = $2::text
 LIMIT 1;
 
 -- name: GetSMSMessage :one
@@ -35,8 +35,8 @@ SELECT * FROM public.sms_messages WHERE id = $1 LIMIT 1;
 SELECT * FROM public.sms_messages
 WHERE payment_profile_id = $1
   AND match_status       = 'held'
-  AND parsed->>'sender_number' = $2
-  AND (parsed->>'amount')::bigint = $3
+  AND parsed->>'sender_number' = $2::text
+  AND (parsed->>'amount')::bigint = $3::bigint
 ORDER BY received_at ASC;
 
 -- name: ListUnmatchedSMS :many

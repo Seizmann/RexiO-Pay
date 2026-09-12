@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 )
 
 // Config holds all runtime configuration loaded from environment variables.
@@ -41,6 +42,13 @@ type Config struct {
 	// MFS OTP onboarding
 	PlatformVerificationNumber string
 	PlatformDeviceMerchantID   string
+
+	// Android device API configuration
+	DeviceLatestAppVersion string
+	DeviceAPKURL           string
+	DeviceMandatoryUpdate  bool
+	DeviceParserVersion    string
+	DeviceSenderIDs        map[string][]string
 }
 
 // Load reads and validates all environment variables. Panics on missing required fields.
@@ -68,6 +76,12 @@ func Load() *Config {
 
 		PlatformVerificationNumber: getEnv("PLATFORM_VERIFICATION_NUMBER", ""),
 		PlatformDeviceMerchantID:   getEnv("PLATFORM_DEVICE_MERCHANT_ID", ""),
+
+		DeviceLatestAppVersion: getEnv("DEVICE_LATEST_APP_VERSION", ""),
+		DeviceAPKURL:           getEnv("DEVICE_APK_URL", ""),
+		DeviceMandatoryUpdate:  getEnvBool("DEVICE_MANDATORY_UPDATE", false),
+		DeviceParserVersion:    getEnv("DEVICE_PARSER_VERSION", ""),
+		DeviceSenderIDs:        parseSenderIDs(getEnv("DEVICE_SENDER_IDS", "")),
 	}
 
 	// Decode device secret encryption key (64 hex chars = 32 bytes)
@@ -106,4 +120,43 @@ func getEnvInt(key string, fallback int) int {
 		return fallback
 	}
 	return n
+}
+
+func getEnvBool(key string, fallback bool) bool {
+	v := strings.TrimSpace(os.Getenv(key))
+	if v == "" {
+		return fallback
+	}
+	parsed, err := strconv.ParseBool(v)
+	if err != nil {
+		return fallback
+	}
+	return parsed
+}
+
+// parseSenderIDs accepts comma-separated provider=s1|s2 entries, for example
+// "bkash=bKash,16247;nagad=NAGAD,16167". Unknown and empty entries are ignored.
+func parseSenderIDs(value string) map[string][]string {
+	result := make(map[string][]string)
+	for _, providerEntry := range strings.Split(value, ";") {
+		providerEntry = strings.TrimSpace(providerEntry)
+		if providerEntry == "" {
+			continue
+		}
+		parts := strings.SplitN(providerEntry, "=", 2)
+		if len(parts) != 2 {
+			continue
+		}
+		provider := strings.ToLower(strings.TrimSpace(parts[0]))
+		if provider == "" {
+			continue
+		}
+		for _, sender := range strings.FieldsFunc(parts[1], func(r rune) bool { return r == ',' || r == '|' }) {
+			sender = strings.TrimSpace(sender)
+			if sender != "" {
+				result[provider] = append(result[provider], sender)
+			}
+		}
+	}
+	return result
 }

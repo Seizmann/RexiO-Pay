@@ -1,0 +1,104 @@
+[
+  {
+    "name": "personal-english",
+    "provider": "bkash",
+    "account_type": "personal",
+    "raw": "You have received Tk 1,234.50 from +8801712345678. Ref: ORDER-42 Fee Tk 5.00. Balance Tk 12,345.50. TrxID 9XAB2C at 12/09/2026 14:30",
+    "expected": {
+      "provider": "bkash",
+      "account_type": "personal",
+      "amount": "1234.50",
+      "sender_number": "01712345678",
+      "trx_id": "9XAB2C",
+      "balance": "12345.50",
+      "fee": "5.00",
+      "reference": "ORDER-42",
+      "sms_time": "12/09/2026 14:30"
+    }
+  },
+  {
+    "name": "merchant-english",
+    "provider": "bkash",
+    "account_type": "merchant",
+    "raw": "You have received payment Tk 750 from 01711223344. Fee Tk 0.00. Balance Tk 8,750. TrxID BKMER123 at 12/09/2026 14:31",
+    "expected": {
+      "provider": "bkash",
+      "account_type": "merchant",
+      "amount": "750",
+      "sender_number": "01711223344",
+      "trx_id": "BKMER123",
+      "balance": "8750",
+      "fee": "0.00",
+      "reference": "",
+      "sms_time": "12/09/2026 14:31"
+    }
+  },
+  {
+    "name": "agent-english",
+    "provider": "bkash",
+    "account_type": "agent",
+    "raw": "Cash In Tk 2,000 from 01719876543 successful. Fee Tk 10. Balance Tk 22,000. TrxID BKAG456 at 12/09/2026 14:32",
+    "expected": {
+      "provider": "bkash",
+      "account_type": "agent",
+      "amount": "2000",
+      "sender_number": "01719876543",
+      "trx_id": "BKAG456",
+      "balance": "22000",
+      "fee": "10",
+      "reference": "",
+      "sms_time": "12/09/2026 14:32"
+    }
+  },
+  {
+    "name": "personal-bangla",
+    "provider": "bkash",
+    "account_type": "personal",
+    "raw": "আপনি ১,২৩৪ টাকা পেয়েছেন ০১৭১২৩৪৫৬৭৮ থেকে। রেফ: ORDER-BN ফি ৫ টাকা। ব্যালেন্স ১২,৩৪৫ টাকা। ট্রানজেকশন আইডি: BN9X2C সময় 12/09/2026 14:33",
+    "expected": {
+      "provider": "bkash",
+      "account_type": "personal",
+      "amount": "1234",
+      "sender_number": "01712345678",
+      "trx_id": "BN9X2C",
+      "balance": "12345",
+      "fee": "5",
+      "reference": "ORDER-BN",
+      "sms_time": "12/09/2026 14:33"
+    }
+  },
+  {
+    "name": "merchant-bangla",
+    "provider": "bkash",
+    "account_type": "merchant",
+    "raw": "আপনি ৭৫০ টাকা পেমেন্ট পেয়েছেন ০১৭১১২২৩৩৪৪ থেকে। ফি ০ টাকা। ব্যালেন্স ৮৭৫০ টাকা। ট্রানজেকশন আইডি: BNMER123 সময় 12/09/2026 14:34",
+    "expected": {
+      "provider": "bkash",
+      "account_type": "merchant",
+      "amount": "750",
+      "sender_number": "01711223344",
+      "trx_id": "BNMER123",
+      "balance": "8750",
+      "fee": "0",
+      "reference": "",
+      "sms_time": "12/09/2026 14:34"
+    }
+  },
+  {
+    "name": "agent-bangla",
+    "provider": "bkash",
+    "account_type": "agent",
+    "raw": "ক্যাশ ইন ২,০০০ টাকা ০১৭১৯৮৭৬৫৪৩ থেকে সফল। ব্যালেন্স ২২,০০০ টাকা। ট্রানজেকশন আইডি: BNAG456 সময় 12/09/2026 14:35",
+    "expected": {
+      "provider": "bkash",
+      "account_type": "agent",
+      "amount": "2000",
+      "sender_number": "01719876543",
+      "trx_id": "BNAG456",
+      "balance": "22000",
+      "fee": "",
+      "reference": "",
+      "sms_time": "12/09/2026 14:35"
+    }
+  }
+]

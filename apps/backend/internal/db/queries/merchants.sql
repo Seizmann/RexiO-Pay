@@ -43,3 +43,8 @@ WHERE m.id = $1;
 
 -- name: GetPlan :one
 SELECT * FROM public.plans WHERE code = $1 LIMIT 1;
+
+-- name: DisableMerchant :exec
+UPDATE public.merchants
+SET plan_status = 'disabled'
+WHERE id = $1;

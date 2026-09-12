@@ -94,6 +94,62 @@ func (q *Queries) CreateAnnouncement(ctx context.Context, arg CreateAnnouncement
 	return i, err
 }
 
+const listAnnouncementsAdmin = `-- name: ListAnnouncementsAdmin :many
+SELECT id, title, body, severity, expires_at, created_at FROM public.announcements
+ORDER BY created_at DESC
+LIMIT $1 OFFSET $2
+`
+
+type ListAnnouncementsAdminParams struct {
+	Limit  int32 `json:"limit"`
+	Offset int32 `json:"offset"`
+}
+
+func (q *Queries) ListAnnouncementsAdmin(ctx context.Context, arg ListAnnouncementsAdminParams) ([]Announcement, error) {
+	rows, err := q.db.QueryContext(ctx, listAnnouncementsAdmin, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Announcement{}
+	for rows.Next() {
+		var i Announcement
+		if err := rows.Scan(&i.ID, &i.Title, &i.Body, &i.Severity, &i.ExpiresAt, &i.CreatedAt); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const updateAnnouncement = `-- name: UpdateAnnouncement :one
+UPDATE public.announcements
+SET title = $2,
+    body = $3,
+    severity = $4,
+    expires_at = $5
+WHERE id = $1
+RETURNING id, title, body, severity, expires_at, created_at
+`
+
+type UpdateAnnouncementParams struct {
+	ID        string       `json:"id"`
+	Title     string       `json:"title"`
+	Body      string       `json:"body"`
+	Severity  string       `json:"severity"`
+	ExpiresAt sql.NullTime `json:"expires_at"`
+}
+
+func (q *Queries) UpdateAnnouncement(ctx context.Context, arg UpdateAnnouncementParams) (Announcement, error) {
+	row := q.db.QueryRowContext(ctx, updateAnnouncement, arg.ID, arg.Title, arg.Body, arg.Severity, arg.ExpiresAt)
+	var i Announcement
+	err := row.Scan(&i.ID, &i.Title, &i.Body, &i.Severity, &i.ExpiresAt, &i.CreatedAt)
+	return i, err
+}
+
 const deleteAnnouncement = `-- name: DeleteAnnouncement :exec
 DELETE FROM public.announcements WHERE id = $1
 `

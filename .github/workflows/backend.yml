@@ -3,9 +3,9 @@ name: backend
 on:
   push:
     branches: [main]
-    paths: ["apps/backend/**"]
+    paths: ["apps/backend/**", "supabase/**"]
   pull_request:
-    paths: ["apps/backend/**"]
+    paths: ["apps/backend/**", "supabase/**"]
 
 defaults:
   run:
@@ -14,14 +14,51 @@ defaults:
 jobs:
   test:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: rexio_test
+          POSTGRES_USER: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d rexio_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-go@v5
         with:
           go-version: "1.22"
-      - run: go vet ./...
-      - run: go test ./...
+          cache-dependency-path: apps/backend/go.sum
+
+      - name: Install migrate CLI
+        working-directory: .
+        run: go install -tags 'pgx5' github.com/golang-migrate/migrate/v4/cmd/migrate@v4.20.1
+
+      - name: Run migrations
+        env:
+          TEST_DATABASE_URL: postgres://postgres:test@localhost:5432/rexio_test?sslmode=disable
+        run: |
+          "$HOME/go/bin/migrate" \
+            -database "$TEST_DATABASE_URL" \
+            -path internal/db/migrations up
+
+      - name: Go vet
+        run: go vet ./...
+
+      - name: Go tests
+        env:
+          TEST_DATABASE_URL: postgres://postgres:test@localhost:5432/rexio_test?sslmode=disable
+        run: go test -race -count=1 ./...
+
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v6
         with:
+          version: v1.64.8
           working-directory: apps/backend

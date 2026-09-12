@@ -130,6 +130,17 @@ func (q *Queries) GetPlan(ctx context.Context, code string) (Plan, error) {
 	return i, err
 }
 
+const disableMerchant = `-- name: DisableMerchant :exec
+UPDATE public.merchants
+SET plan_status = 'disabled'
+WHERE id = $1
+`
+
+func (q *Queries) DisableMerchant(ctx context.Context, id string) error {
+	_, err := q.db.ExecContext(ctx, disableMerchant, id)
+	return err
+}
+
 const listMerchantsAdmin = `-- name: ListMerchantsAdmin :many
 SELECT m.id, m.owner_user_id, m.name, m.slug, m.logo_url, m.favicon_url, m.brand_color, m.support_email, m.support_phone, m.plan_id, m.plan_status, m.plan_renews_at, m.session_count_current_period, m.settings, m.created_at,
        (SELECT COUNT(*) FROM public.devices        WHERE merchant_id = m.id) AS device_count,

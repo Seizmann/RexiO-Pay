@@ -12,8 +12,9 @@ import (
 
 // CachedResponse holds the stored response for an idempotent request.
 type CachedResponse struct {
-	Body       []byte
-	StatusCode int
+	Body        []byte
+	StatusCode  int
+	RequestHash string
 }
 
 // Store saves an idempotency key with its response. Silently ignores conflicts
@@ -43,8 +44,9 @@ func Check(ctx context.Context, pool *dbpkg.Pool, key, merchantID string) (*Cach
 		return nil, fmt.Errorf("idempotency.Check: %w", err)
 	}
 	return &CachedResponse{
-		Body:       row.ResponseBody,
-		StatusCode: int(row.StatusCode),
+		Body:        row.ResponseBody,
+		StatusCode:  int(row.StatusCode),
+		RequestHash: row.RequestHash,
 	}, nil
 }
 

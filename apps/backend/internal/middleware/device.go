@@ -92,7 +92,7 @@ func DeviceHMAC(pool *dbpkg.Pool, secretKey []byte, tg *telegram.Alerter) func(h
 
 			// Constant-time comparison
 			sigBytes, err := hex.DecodeString(strings.TrimSpace(sigHex))
-			if err != nil || !hmac.Equal([]byte(expected), []byte(hex.EncodeToString(sigBytes))) {
+			if err != nil || !hmac.Equal([]byte(expected), sigBytes) {
 				count, err2 := q.IncrFailedSigCount(r.Context(), deviceID)
 				if err2 != nil {
 					slog.Error("device HMAC: incr failed sig count", "err", err2)
@@ -101,7 +101,9 @@ func DeviceHMAC(pool *dbpkg.Pool, secretKey []byte, tg *telegram.Alerter) func(h
 					if err3 := q.DisableDevice(r.Context(), deviceID); err3 != nil {
 						slog.Error("device HMAC: disable device", "err", err3)
 					}
-					tg.Send("🚨 RexiO Pay: Device auto-disabled after 3 failed signatures — device_id: " + deviceID)
+					if tg != nil {
+						tg.Send("RexiO Pay: device auto-disabled after 3 failed signatures — device_id: " + deviceID)
+					}
 					apierr.Render(w, http.StatusUnauthorized, apierr.CodeDeviceDisabled,
 						"device disabled after 3 consecutive signature failures")
 					return
@@ -111,11 +113,9 @@ func DeviceHMAC(pool *dbpkg.Pool, secretKey []byte, tg *telegram.Alerter) func(h
 			}
 
 			// Good signature — reset counter async
-			go func() {
-				if err := q.ResetFailedSigCount(context.Background(), deviceID); err != nil {
-					slog.Error("device HMAC: reset failed sig count", "err", err)
-				}
-			}()
+			if err := q.ResetFailedSigCount(r.Context(), deviceID); err != nil {
+				slog.Error("device HMAC: reset failed sig count", "err", err)
+			}
 
 			ctx := context.WithValue(r.Context(), ctxKeyDeviceID{}, deviceID)
 			next.ServeHTTP(w, r.WithContext(ctx))

@@ -1,0 +1,104 @@
+[
+  {
+    "name": "personal-english",
+    "provider": "nagad",
+    "account_type": "personal",
+    "raw": "Money Received. Amount: Tk 1,234 Sender: +8801712345678 Ref: ORDER-77 TxnID: NG9XAB Balance: Tk 12,345 12/09/2026 15:00",
+    "expected": {
+      "provider": "nagad",
+      "account_type": "personal",
+      "amount": "1234",
+      "sender_number": "01712345678",
+      "trx_id": "NG9XAB",
+      "balance": "12345",
+      "fee": "",
+      "reference": "ORDER-77",
+      "sms_time": "12/09/2026 15:00"
+    }
+  },
+  {
+    "name": "agent-english",
+    "provider": "nagad",
+    "account_type": "agent",
+    "raw": "Cash In Received. Amount: Tk 2,000 Uddokta: 01719876543 TxnID: NGAG456 Balance: 22,000 12/09/2026 15:01",
+    "expected": {
+      "provider": "nagad",
+      "account_type": "agent",
+      "amount": "2000",
+      "sender_number": "01719876543",
+      "trx_id": "NGAG456",
+      "balance": "22000",
+      "fee": "",
+      "reference": "",
+      "sms_time": "12/09/2026 15:01"
+    }
+  },
+  {
+    "name": "merchant-english",
+    "provider": "nagad",
+    "account_type": "merchant",
+    "raw": "received a payment of Tk 750 from 01711223344. TrxID: NGMER123 at 12/09/2026 15:02",
+    "expected": {
+      "provider": "nagad",
+      "account_type": "merchant",
+      "amount": "750",
+      "sender_number": "01711223344",
+      "trx_id": "NGMER123",
+      "balance": "",
+      "fee": "",
+      "reference": "",
+      "sms_time": "12/09/2026 15:02"
+    }
+  },
+  {
+    "name": "personal-bangla",
+    "provider": "nagad",
+    "account_type": "personal",
+    "raw": "আপনি ১,২৩৪ টাকা পেয়েছেন। প্রেরক: ০১৭১২৩৪৫৬৭৮ রেফ: ORDER-NG লেনদেন আইডি: BN9XAB ব্যালেন্স: ১২,৩৪৫ 12/09/2026 15:03",
+    "expected": {
+      "provider": "nagad",
+      "account_type": "personal",
+      "amount": "1234",
+      "sender_number": "01712345678",
+      "trx_id": "BN9XAB",
+      "balance": "12345",
+      "fee": "",
+      "reference": "ORDER-NG",
+      "sms_time": "12/09/2026 15:03"
+    }
+  },
+  {
+    "name": "agent-bangla",
+    "provider": "nagad",
+    "account_type": "agent",
+    "raw": "ক্যাশ ইন গ্রহণ। পরিমাণ: ২,০০০ টাকা উদ্যোক্তা: ০১৭১৯৮৭৬৫৪৩ লেনদেন আইডি: BNAG456 ব্যালেন্স: ২২,০০০ 12/09/2026 15:04",
+    "expected": {
+      "provider": "nagad",
+      "account_type": "agent",
+      "amount": "2000",
+      "sender_number": "01719876543",
+      "trx_id": "BNAG456",
+      "balance": "22000",
+      "fee": "",
+      "reference": "",
+      "sms_time": "12/09/2026 15:04"
+    }
+  },
+  {
+    "name": "merchant-bangla",
+    "provider": "nagad",
+    "account_type": "merchant",
+    "raw": "আপনি ৭৫০ টাকা পেমেন্ট পেয়েছেন ০১৭১১২২৩৩৪৪ থেকে। লেনদেন আইডি: BNMER123 সময় 12/09/2026 15:05",
+    "expected": {
+      "provider": "nagad",
+      "account_type": "merchant",
+      "amount": "750",
+      "sender_number": "01711223344",
+      "trx_id": "BNMER123",
+      "balance": "",
+      "fee": "",
+      "reference": "",
+      "sms_time": "12/09/2026 15:05"
+    }
+  }
+]

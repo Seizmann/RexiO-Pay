@@ -20,9 +20,23 @@ SELECT * FROM public.announcements
 WHERE expires_at IS NULL OR expires_at > now()
 ORDER BY created_at DESC;
 
+-- name: ListAnnouncementsAdmin :many
+SELECT * FROM public.announcements
+ORDER BY created_at DESC
+LIMIT $1 OFFSET $2;
+
 -- name: CreateAnnouncement :one
 INSERT INTO public.announcements (id, title, body, severity, expires_at)
 VALUES ($1, $2, $3, $4, $5)
+RETURNING *;
+
+-- name: UpdateAnnouncement :one
+UPDATE public.announcements
+SET title = $2,
+    body = $3,
+    severity = $4,
+    expires_at = $5
+WHERE id = $1
 RETURNING *;
 
 -- name: DeleteAnnouncement :exec

@@ -22,12 +22,12 @@ LIMIT 1
 `
 
 type FindDuplicateTrxIDParams struct {
-	Provider string                `json:"provider"`
-	Parsed   pqtype.NullRawMessage `json:"parsed"`
+	Provider string `json:"provider"`
+	TrxID    string `json:"trx_id"`
 }
 
 func (q *Queries) FindDuplicateTrxID(ctx context.Context, arg FindDuplicateTrxIDParams) (string, error) {
-	row := q.db.QueryRowContext(ctx, findDuplicateTrxID, arg.Provider, arg.Parsed)
+	row := q.db.QueryRowContext(ctx, findDuplicateTrxID, arg.Provider, arg.TrxID)
 	var id string
 	err := row.Scan(&id)
 	return id, err
@@ -43,13 +43,13 @@ ORDER BY received_at ASC
 `
 
 type GetHeldSMSForProfileParams struct {
-	PaymentProfileID sql.NullString        `json:"payment_profile_id"`
-	Parsed           pqtype.NullRawMessage `json:"parsed"`
-	Parsed_2         pqtype.NullRawMessage `json:"parsed_2"`
+	PaymentProfileID sql.NullString `json:"payment_profile_id"`
+	SenderNumber     string         `json:"sender_number"`
+	Amount           int64          `json:"amount"`
 }
 
 func (q *Queries) GetHeldSMSForProfile(ctx context.Context, arg GetHeldSMSForProfileParams) ([]SmsMessage, error) {
-	rows, err := q.db.QueryContext(ctx, getHeldSMSForProfile, arg.PaymentProfileID, arg.Parsed, arg.Parsed_2)
+	rows, err := q.db.QueryContext(ctx, getHeldSMSForProfile, arg.PaymentProfileID, arg.SenderNumber, arg.Amount)
 	if err != nil {
 		return nil, err
 	}

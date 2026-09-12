@@ -17,11 +17,19 @@ func ReadBody(next http.Handler) http.Handler {
 		var body []byte
 		if r.Body != nil {
 			body, _ = io.ReadAll(r.Body)
-			r.Body.Close()
+			_ = r.Body.Close()
 		}
-		// Restore body for downstream handlers, attach bytes to context
+		// Restore body for downstream handlers, attach bytes to context.
 		r.Body = io.NopCloser(bytes.NewReader(body))
 		ctx := context.WithValue(r.Context(), ctxKeyRawBody{}, body)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
+}
+
+// RawBody returns the exact bytes captured by ReadBody. If ReadBody was not
+// installed, it returns nil; device routes should always install it before
+// DeviceHMAC.
+func RawBody(r *http.Request) []byte {
+	body, _ := r.Context().Value(ctxKeyRawBody{}).([]byte)
+	return body
 }
